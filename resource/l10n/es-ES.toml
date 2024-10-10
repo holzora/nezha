@@ -71,7 +71,7 @@ other = "Ignorar todo, ejecutar solo a través de servidores específicos"
 other = "Incluir todo, excepto servidores específicos"
 
 [ExecuteByTriggerServer]
-other = "Ejecutar por servidor disparador"
+other = "Ejecutar en servidores con alarma"
 
 [SpecificServers]
 other = "Servidores Específicos"
@@ -104,7 +104,7 @@ other = "Segundos, Minutos, Horas, Días, Meses, Semanas - Ver detalles a"
 other = "Formato de Expresión de Cron"
 
 [IntroductionOfCommands]
-other = "Introducción de Comandos: Escriba comandos como en scripts shell/bat. Evite saltos de línea; conecte múltiples comandos con <code>&&</code> o <code>&</code>. Si no se encuentra un comando, verifique la variable de entorno <code>PATH</code>. En servidores <code>Linux</code>, antepóngale <code>source ~/.bashrc</code> a los comandos, o use rutas absolutas."
+other = "Introducción de Comandos: Escriba comandos como en scripts shell/bat. Evite saltos de línea; conecte múltiples comandos con <code>&&</code> o <code>;</code>. Si no se encuentra un comando, verifique la variable de entorno <code>PATH</code>. En servidores <code>Linux</code>, antepóngale <code>source ~/.bashrc</code> a los comandos, o use rutas absolutas."
 
 [AddMonitor]
 other = "Agregar Monitor de Servicio"
@@ -226,6 +226,9 @@ other = "Secreto"
 [Note]
 other = "Nota"
 
+[PublicNote]
+other = "Nota Pública"
+
 [LinuxOneKeyInstall]
 other = "Instalación Linux con Un Solo Clic"
 
@@ -251,7 +254,7 @@ other = "Cubrir Todo"
 other = "Ignorar Todo"
 
 [ByTrigger]
-other = "Ejecutar por Disparador"
+other = "Servidores con alarma"
 
 [DeleteScheduledTask]
 other = "Eliminar Tarea Programada"
@@ -278,7 +281,7 @@ other = "¿No tiene una cuenta?"
 other = "Certificados HTTP(S)/SSL"
 
 [TCPPort]
-other = "Puerto TCP"
+other = "TCPing"
 
 [DeleteService]
 other = "Eliminar Servicio"
@@ -687,3 +690,18 @@ other = "Cancelar"
 
 [FMError]
 other = "Agent devolvió un error, consulte la consola para obtener más detalles. Para abrir una nueva conexión, vuelva a abrir el FM."
+
+[Remaining]
+other = "Remaining"
+
+[Lifetime]
+other = "Lifetime"
+
+[Price]
+other = "Price"
+
+[Expired]
+other = "Expired"
+
+[Days]
+other = "d"

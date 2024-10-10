@@ -15,7 +15,7 @@
             </li>
         </ul>
     </div>
-    <div class="chartTitle"><i class="chartCountryCode" :class="'fi fi-' + chartCountryCode"></i> @#chartTitle#@</div>
+    <div class="chartTitle" @click="showCharts(nextServerId)"><i class="chartCountryCode" :class="'fi fi-' + chartCountryCode"></i> @#chartTitle#@</div>
     <div id="chartbox" style="width:100%;height:auto;"></div>
 </div>
 {{template "theme-server-status/footer" .}}
@@ -32,7 +32,8 @@
             chartTitle: '',
             chartCountryCode: '',
             chart: null,
-            currentServerId: ''
+            currentServerId: '',
+            nextServerId: '',
         },
         mixins: [mixinsVue],
         created() {
@@ -66,37 +67,47 @@
                 if(!this.chartDataList[id]) return;
                 if(this.chart) this.disposeCharts(this.chart);
                 this.currentServerId = id;
+                this.nextServerId = this.getNextServerId(id);
                 this.chartCountryCode = this.getServerCountryCode(id);
                 this.chartTitle = this.chartDataList[id][0].server_name;
                 const chartData = this.chartDataList[id];
                 const chartContainer = document.getElementById('chartbox');
-                // 定义图表参数值
                 const MaxTCPPingValue = {{.Conf.MaxTCPPingValue}} ? {{.Conf.MaxTCPPingValue}} : 300;
-                const autoheight = this.isMobile ? (window.innerHeight - 200) : (window.innerHeight - 250);
+                const autoheight = this.isMobile ? (window.innerHeight - 180) : (window.innerHeight - 250);
                 const fontSize = this.isMobile ? 10 : 14;
-                const gridLeft = this.isMobile ? 30 : 36;
+                const gridLeft = (MaxTCPPingValue > 500) ? (this.isMobile ? 36 : 42) : (this.isMobile ? 30 : 36);
                 const gridRight = this.isMobile ? 12 : 20;
                 const legendLeft = this.isMobile ? 'center' : 'center';
                 const legendTop = this.isMobile ? 5 : 5;
                 const legendPadding= this.isMobile ? [5,0,5,0] : [5,0,5,0];
                 const fontColor = this.theme == "dark" ? "#f1f1f1" : "#000000";
+                const chartTheme = this.theme == "dark" ? "dark" : "default";
                 const backgroundColor = this.theme == "dark" ? '' : '';
                 const tooltipBackgroundColor = this.theme == "dark" ? (this.semiTransparent ? "rgba(28,29,38,0.85)" : "rgba(28,29,38,1)") : (this.semiTransparent ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,1)");
                 const tooltipBorderColor = this.theme == "dark" ? (this.semiTransparent ? "rgba(28,29,38,0.9)" : "rgba(28,29,38,1)") : (this.semiTransparent ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,1)");
                 const lineStyleWidth = this.isMobile ? 1 : 2;
                 const splitLineWidth = this.isMobile ? 0.5 : 1;
-                const splitLineColor = this.theme == "dark" ? "rgba(110, 112, 121, 0.95)" : "rgba(224, 230, 241, 0.95)";
-                const markPointLabelColor = this.theme == "dark" ? "#111111" : "#000000";
-                const markPointItemStyleOpacity = this.semiTransparent ? 1 : 0.75;
+                const markPointSymbolSize = this.isMobile ? 36 : 42;
+                const markPointItemStyleOpacity = this.semiTransparent ? 1 : 1;
+                const markPointFontSize = this.isMobile ? 8 : 10;
                 const markLineItemStyleOpacity = this.semiTransparent ? 1 : 0.75;
                 const markLineLineStyleWidth = this.isMobile ? 0.15 : 0.3;
-                this.chart = echarts.init(chartContainer, '', { // init图表
+                const showLoadingMaskColor = this.theme == "dark" ? 'rgba(0, 0, 0, 0)' : 'rgba(255, 255, 255, 0)';
+                const showLoadingTextColor = this.theme == "dark" ? 'rgba(241, 241, 241, 1)' : 'rgba(0, 0, 0, 1)';
+                const showLoadingColor = this.theme == "dark" ? '#D2B206' : '#FFDF32';
+                this.chart = echarts.init(chartContainer, chartTheme, { // init图表
                     renderer: 'canvas',
                     useDirtyRect: false,
                     width: 'auto',
                     height: autoheight,
                 });
-                // 获取图表数据
+                this.chart.showLoading({
+                    text: 'loading',
+                    textColor: showLoadingTextColor,
+                    color: showLoadingColor,
+                    maskColor: showLoadingMaskColor,
+                    zlevel: 2
+                });
                 let legendData = [];
                 let seriesData = [];
                 chartData.forEach((item,key)=> {
@@ -111,9 +122,6 @@
                             loss += 1;
                             const lossrate = 100 * loss / (index + 1);
                             if(lossrate != 100) {
-                                data['main'].push(
-                                    [item.created_at[index], MaxTCPPingValue, lossrate]
-                                );
                                 data['markLine'].push({
                                     xAxis: item.created_at[index],
                                     label: { show: false },
@@ -142,11 +150,9 @@
                             );
                         }
                     });
-                    // 处理legendData
                     totalLossRate = ((loss / item.created_at.length) * 100).toFixed(1);
                     legendName = `${item.monitor_name} ${totalLossRate}%`;
                     legendData.push(legendName);
-                    // 处理seriesData
                     seriesData.push(
                         {
                             name: legendName,
@@ -182,10 +188,9 @@
                                         itemStyle: { 
                                             opacity: markPointItemStyleOpacity
                                         }, 
-                                        symbolSize: 30, 
+                                        symbolSize: markPointSymbolSize, 
                                         label: { 
-                                            fontSize: 8,
-                                            color: markPointLabelColor,
+                                            fontSize: markPointFontSize,
                                             formatter: function (params) {
                                                 return Math.round(params.value);
                                             }
@@ -198,10 +203,9 @@
                                         itemStyle: { 
                                             opacity: markPointItemStyleOpacity
                                         }, 
-                                        symbolSize: 30, 
+                                        symbolSize: markPointSymbolSize, 
                                         label: { 
-                                            fontSize: 8,
-                                            color: markPointLabelColor,
+                                            fontSize: markPointFontSize,
                                             offset: [0, 8],
                                             formatter: function (params) {
                                                 return Math.round(params.value);
@@ -218,7 +222,8 @@
                 const maxLegendsPerRowPc = localStorage.getItem("maxLegendsPerRowPc") ? localStorage.getItem("maxLegendsPerRowPc") : 6;
                 const autoIncrement = Math.floor((legendData.length - 1) / (this.isMobile ? maxLegendsPerRowMobile : maxLegendsPerRowPc)) * (this.isMobile ? 20 : 28);
                 const height = autoheight + autoIncrement;
-                const gridTop = 40 + autoIncrement;
+                const gridTop = this.isMobile ? ( 60 + autoIncrement) : (80 + autoIncrement);
+                const gridBottom = this.isMobile ? 70 : 90;
                 const legendIcon = this.isMobile ? 'rect' : ""; 
                 const itemWidth = this.isMobile ? 10 : 25;
                 const itemHeight = this.isMobile ? 10 : 14;
@@ -228,28 +233,22 @@
                 });
                 // 设置图表配置项
                 const option = {
-                    // 全局调色盘
                     color: this.colors,
-                    // 背景颜色
                     backgroundColor: backgroundColor,
-                    // 文字样式
                     textStyle: {
                         fontSize: fontSize,
                         color: fontColor
                     },
-                    // 图表网格设置
                     grid: {
                         top: gridTop,
                         left: gridLeft,
-                        right: gridRight
+                        right: gridRight,
+                        bottom: gridBottom
                     },
-                    // 图表标题设置
                     title: {
                         show: false,
                     },
-                    // 图表系列数据设置
                     series: seriesData.flat(),
-                    // X轴设置
                     xAxis: {
                         type: 'time',
                         axisLabel: {
@@ -258,7 +257,6 @@
                             }
                         }
                     },
-                    // Y轴设置
                     yAxis: {
                         type: 'value',
                         axisLabel: {
@@ -268,12 +266,10 @@
                         },
                         splitLine: {
                             lineStyle: {
-                                width: splitLineWidth,
-                                color: splitLineColor
+                                width: splitLineWidth
                             }
                         }
                     },
-                    // 图例设置
                     legend: {
                         data: legendData,
                         show: true,
@@ -289,7 +285,6 @@
                         itemWidth: itemWidth,
                         itemHeight: itemHeight,
                     },
-                    // 提示框设置
                     tooltip: {
                         trigger: 'axis',
                         backgroundColor: tooltipBackgroundColor,
@@ -312,7 +307,6 @@
                             return tooltipContent;
                         }
                     },
-                    // 数据缩放设置
                     dataZoom: [
                         {
                             type: 'slider',
@@ -321,17 +315,16 @@
                         }
                     ]
                 };
-                // 设置图表的配置选项
-                this.chart.setOption(option);
+                setTimeout(() => {
+                    this.chart.hideLoading();
+                    this.chart.setOption(option);
+                }, 1000);
             },
-            reloadCharts() { // 重新加载所有图表
-                this.servers.forEach(node => {
-                    const id = node.ID;
-                    const chartData = this.chartDataList[id];
-                    if (chartData) {
-                        this.renderCharts(id,true);
-                    }
-                });
+            reloadCharts() {
+                const chartData = this.chartDataList[this.currentServerId];
+                if (chartData) {
+                    this.renderCharts(this.currentServerId,true);
+                }
             },
             disposeCharts(chart){
                 chart.dispose();
@@ -340,6 +333,16 @@
             getServerCountryCode(id){
                 const result = this.servers.find(item => item.ID == id);
                 return result.Host.CountryCode ? result.Host.CountryCode : 'rb';
+            },
+            getNextServerId(id) {
+                const currentIndex = this.servers.findIndex(item => item.ID === id);
+                if (currentIndex === -1) {
+                    return this.servers[0].ID;
+                }
+                // 判断是否有下一个元素
+                const nextIndex = currentIndex + 1;
+                // 如果有下一个元素，返回下一个元素的 ID；否则返回第一个元素的 ID
+                return nextIndex < this.servers.length ? this.servers[nextIndex].ID : this.servers[0].ID;
             },
             initSearch() {
                 $('#dropdown-search').on('keyup', function() {

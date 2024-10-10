@@ -306,6 +306,7 @@ type serverForm struct {
 	Secret       string
 	Tag          string
 	Note         string
+	PublicNote   string
 	HideForGuest string
 	EnableDDNS   string
 	EnableIPv4   string
@@ -326,6 +327,7 @@ func (ma *memberAPI) addOrEditServer(c *gin.Context) {
 		s.ID = sf.ID
 		s.Tag = sf.Tag
 		s.Note = sf.Note
+		s.PublicNote = sf.PublicNote
 		s.HideForGuest = sf.HideForGuest == "on"
 		s.EnableDDNS = sf.EnableDDNS == "on"
 		s.EnableIPv4 = sf.EnableIPv4 == "on"
@@ -938,7 +940,7 @@ func (ma *memberAPI) updateSetting(c *gin.Context) {
 		return
 	}
 
-	if _, yes := model.Themes[sf.DashboardTheme]; !yes {
+	if _, yes := model.DashboardThemes[sf.DashboardTheme]; !yes {
 		c.JSON(http.StatusOK, model.Response{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("后台主题不存在：%s", sf.DashboardTheme),
